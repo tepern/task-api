@@ -8,4 +8,28 @@ use Illuminate\Database\Eloquent\Model;
 class Task extends Model
 {
     use HasFactory;
+
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var array<int, string>
+     */
+    protected $fillable = [
+        'name',
+        'description',
+        'endTask',
+        'ownerId',
+        'assigneeId',
+        'status'
+    ];
+
+    function owner()
+    {
+        return $this->belongsTo(User::class, 'ownerId');
+    }
+    
+    function assignee()
+    {
+        return $this->belongsTo(User::class, 'assigneeId');
+    }
 }
