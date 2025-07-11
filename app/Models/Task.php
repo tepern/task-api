@@ -20,7 +20,8 @@ class Task extends Model
         'endTask',
         'ownerId',
         'assigneeId',
-        'status'
+        'status',
+        'finished_at'
     ];
 
     function owner()
