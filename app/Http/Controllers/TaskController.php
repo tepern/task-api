@@ -92,7 +92,7 @@ class TaskController extends Controller
         }
 
         $userId = Auth::id();
-    
+
         if ($task->ownerId === $userId) {
             $result = $task->update($data);
 
