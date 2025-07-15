@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Task\TaskStatusEnum;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -19,7 +20,7 @@ return new class extends Migration
             $table->unsignedBigInteger('assigneeId');
             $table->dateTime('endTask');
             $table->timestamp('finished_at')->nullable();
-            $table->enum('status', ["Новая", "В работе", "Завершена"])->default("Новая");
+            $table->enum('status', TaskStatusEnum::cases())->default(TaskStatusEnum::NEW);
             $table->timestamps();
 
             $table->foreign('ownerId')->references('id')->on('users');

@@ -3,7 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Http\Resources\TaskResource;
-use App\Models\Task;
+use App\Models\Task\Task;
+use App\Models\Task\TaskStatusEnum;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -39,7 +40,7 @@ class TaskController extends Controller
         $data = $request->all();
 
         $query = Task::query();
-        $status = ["Новая", "В работе", "Завершена"];
+        $status = TaskStatusEnum::cases();
 
         if (!empty($data['status']) && in_array($data['status'], $status)) {
 
@@ -87,7 +88,7 @@ class TaskController extends Controller
         }
 
         $data = $request->all();
-        if ($data['status'] === "Завершена") {
+        if ($data['status'] === TaskStatusEnum::class) {
             $data['finished_at'] = Carbon::now();
         }
 
@@ -108,7 +109,7 @@ class TaskController extends Controller
     {
         /** @var Task $task */
         $task = Task::find($id);
-        $status = ["Новая", "В работе", "Завершена"];
+        $status = TaskStatusEnum::cases();
 
         if (empty($task)) {
             return response()->json(['msg' => "Задача id=[{$id}] не найдена"]);
@@ -122,7 +123,7 @@ class TaskController extends Controller
             $result = $task->update($data);
 
             if ($result) {
-                if ($task->status = "Завершена") {
+                if ($task->status = TaskStatusEnum::COMPLETED) {
                     $task->finished_at = Carbon::now();
                     $task->save();
                 }
@@ -146,7 +147,7 @@ class TaskController extends Controller
         $userId = Auth::id();
 
         if ($task->ownerId === $userId) {
-            $task->status = 'Завершена';
+            $task->status = TaskStatusEnum::COMPLETED;
             $task->finished_at = Carbon::now();
             $result = $task->save();
 
@@ -164,6 +165,11 @@ class TaskController extends Controller
     public function destroy(string $id)
     {
         $task = Task::find($id);
+
+        if (empty($task)) {
+            return response()->json(['msg' => "Задача id=[{$id}] не найдена"]);
+        }
+        
         $userId = Auth::id();
         if ($task->ownerId === $userId) {
             $task->delete();
