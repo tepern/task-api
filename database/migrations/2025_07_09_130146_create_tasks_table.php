@@ -20,7 +20,7 @@ return new class extends Migration
             $table->unsignedBigInteger('assigneeId');
             $table->dateTime('endTask');
             $table->timestamp('finished_at')->nullable();
-            $table->enum('status', TaskStatusEnum::cases())->default(TaskStatusEnum::NEW);
+            $table->enum('status', [TaskStatusEnum::NEW->value, TaskStatusEnum::ACTIVE->value, TaskStatusEnum::COMPLETED->value])->default(TaskStatusEnum::NEW->value);
             $table->timestamps();
 
             $table->foreign('ownerId')->references('id')->on('users');

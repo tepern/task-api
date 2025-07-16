@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\CreateTaskRequest;
+use App\Http\Requests\SearchTaskRequest;
 use App\Http\Resources\TaskResource;
 use App\Models\Task\Task;
 use App\Models\Task\TaskStatusEnum;
@@ -15,7 +17,7 @@ class TaskController extends Controller
      * Store a newly created resource in storage.
      * @return \Illuminate\Http\Response
      */
-    public function create(Request $request)
+    public function create(CreateTaskRequest $request)
     {
         $data = $request->input();
 
@@ -35,20 +37,22 @@ class TaskController extends Controller
         }
     }
 
-    public function search(Request $request)
+    public function search(SearchTaskRequest $request)
     {
         $data = $request->all();
 
         $query = Task::query();
-        $status = TaskStatusEnum::cases();
+        $status = [TaskStatusEnum::NEW->value, TaskStatusEnum::ACTIVE->value, TaskStatusEnum::COMPLETED->value];
 
         if (!empty($data['status']) && in_array($data['status'], $status)) {
 
             $query = $query->where('status', $data['status']);
-        } else if (!empty($data['assigneeId'])) {
+        } else $query = $query->where('status', TaskStatusEnum::ACTIVE->value);
+
+        if (!empty($data['assigneeId'])) {
 
             $query = $query->where('assigneeId', $data['assigneeId']);
-        } else $query = $query->where('status', 'В работе');
+        }
 
         if (!empty($data['sort']) && in_array($data['sort'], ['createdAt', 'endTask'])) {
 
@@ -78,7 +82,7 @@ class TaskController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(CreateTaskRequest $request, string $id)
     {
         /** @var Task $task */
         $task = Task::find($id);
@@ -88,7 +92,7 @@ class TaskController extends Controller
         }
 
         $data = $request->all();
-        if ($data['status'] === TaskStatusEnum::class) {
+        if ($data['status'] === TaskStatusEnum::COMPLETED->value) {
             $data['finished_at'] = Carbon::now();
         }
 
@@ -109,7 +113,7 @@ class TaskController extends Controller
     {
         /** @var Task $task */
         $task = Task::find($id);
-        $status = TaskStatusEnum::cases();
+        $status = [TaskStatusEnum::NEW->value, TaskStatusEnum::ACTIVE->value, TaskStatusEnum::COMPLETED->value];
 
         if (empty($task)) {
             return response()->json(['msg' => "Задача id=[{$id}] не найдена"]);
@@ -123,7 +127,7 @@ class TaskController extends Controller
             $result = $task->update($data);
 
             if ($result) {
-                if ($task->status = TaskStatusEnum::COMPLETED) {
+                if ($task->status = TaskStatusEnum::COMPLETED->value) {
                     $task->finished_at = Carbon::now();
                     $task->save();
                 }
@@ -147,7 +151,7 @@ class TaskController extends Controller
         $userId = Auth::id();
 
         if ($task->ownerId === $userId) {
-            $task->status = TaskStatusEnum::COMPLETED;
+            $task->status = TaskStatusEnum::COMPLETED->value;
             $task->finished_at = Carbon::now();
             $result = $task->save();
 
@@ -169,7 +173,7 @@ class TaskController extends Controller
         if (empty($task)) {
             return response()->json(['msg' => "Задача id=[{$id}] не найдена"]);
         }
-        
+
         $userId = Auth::id();
         if ($task->ownerId === $userId) {
             $task->delete();
